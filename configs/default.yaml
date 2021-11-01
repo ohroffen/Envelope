@@ -1,0 +1,7 @@
+db:
+  name: envelope_rains
+  host: "47.100.196.232"
+  port: "3306"
+  username: root
+  password: "123456"
+  charset: utf8
