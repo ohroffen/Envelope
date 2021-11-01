@@ -1,0 +1,4 @@
+db:
+  host: rdsmysqlhf6ed4fde2675f947.rds.ivolces.com
+  username: group8
+  password: "Group812345678"
