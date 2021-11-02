@@ -52,6 +52,7 @@ func (c *Config) init() error {
 
     env := os.Getenv("GO_ENV")
     if env != "" {
+        fmt.Println(env)
         viper.SetConfigName(env)
         viper.AddConfigPath("./configs")
         viper.SetConfigType("yaml")
