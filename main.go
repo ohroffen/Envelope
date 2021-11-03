@@ -1,12 +1,15 @@
 package main
 
 import (
+	"MyEnvelope/algo"
 	"MyEnvelope/api"
 	"MyEnvelope/dao"
 	"MyEnvelope/utils"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -19,7 +22,9 @@ func main() {
 	if err := utils.Run(*conf); err != nil {
 		panic(err)
 	}
+	fmt.Println(viper.AllSettings())
 	dao.InitDB()
+	algo.InitConfig()
 
 	r := gin.Default()
 
