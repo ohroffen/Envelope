@@ -5,19 +5,52 @@ import (
 	"fmt"
 	"sort"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
-// GetEnvelopesByUserId 获取当前用户的所有红包
-func GetEnvelopesByUserId(uid string) ([]entity.Envelope, int64) {
-	var envelopes []entity.Envelope
+var db *gorm.DB
 
-	envelopes = make([]entity.Envelope, 0, 5)
-	db, err := GetDB()
+func InitDB() {
+
+	//配置MySQL连接参数
+	username := "root"
+	password := "123456"
+	host := "47.100.196.232"
+	port := 3306
+	Dbname := "envelope_rains"
+
+	//通过前面的数据库参数，拼接MYSQL DSN， 其实就是数据库连接串（数据源名称）
+	//MYSQL dsn格式： {username}:{password}@tcp({host}:{port})/{Dbname}?charset=utf8&parseTime=True&loc=Local
+	//类似{username}使用花括号包着的名字都是需要替换的参数
+	dsn := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
+		username, password, host, port, Dbname)
+
+	//连接MYSQL，好像默认是开启事务的
+	Db, err := gorm.Open("mysql", dsn)
 	if err != nil {
 		panic("连接数据库失败, error=" + err.Error())
 	}
 
-	defer db.Close()
+	sqlDB := Db.DB()
+
+	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
+	sqlDB.SetMaxIdleConns(10)
+
+	// SetMaxOpenConns 设置打开数据库连接的最大数量。
+	sqlDB.SetMaxOpenConns(100)
+
+	// SetConnMaxLifetime 设置了连接可复用的最大时间。
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	db = Db
+}
+
+// GetEnvelopesByUserId 获取当前用户的所有红包
+func GetEnvelopesByUserId(uid string) ([]entity.Envelope, int64) {
+	// var envelopes []entity.Envelope
+
+	envelopes := make([]entity.Envelope, 0, 5)
 
 	db.Where("user_id = ?", uid).Find(&envelopes)
 
@@ -43,29 +76,15 @@ func GetEnvelopesByUserId(uid string) ([]entity.Envelope, int64) {
 	return envelopes, totalAmount
 }
 
-func GetEnvelopeByUserIdAndEnvelopeId(uid, envId string) entity.Envelope  {
+func GetEnvelopeByUserIdAndEnvelopeId(uid, envId string) entity.Envelope {
 	var envelope entity.Envelope
-	db, err := GetDB()
-	if err != nil {
-		panic("连接数据库失败, error=" + err.Error())
-	}
 
-	defer db.Close()
-
-	db.Where("user_id = ? and envelope_id = ?",uid, envId).Find(&envelope)
+	db.Where("user_id = ? and envelope_id = ?", uid, envId).Find(&envelope)
 
 	return envelope
 }
 
-
 func UpdateOpenState(envelope *entity.Envelope) {
-	db, err := GetDB()
-	if err != nil {
-		panic("连接数据库失败, error=" + err.Error())
-	}
-
-	defer db.Close()
-
 	db.Model(&envelope).
 		Where("envelope_id = ?", envelope.EnvelopeID).
 		Update("opened", envelope.Opened)
@@ -74,13 +93,6 @@ func UpdateOpenState(envelope *entity.Envelope) {
 // GetCurrentCount 当前遍历可以缓存到内存
 // 找到用户的红包数量，可以直接select count();
 func GetCurrentCount(uid string) int {
-	db, err := GetDB()
-	if err != nil {
-		panic("连接数据库失败, error=" + err.Error())
-	}
-
-	defer db.Close()
-
 	var count int = 0
 	db.Model(entity.Envelope{}).Where("user_id = ?", uid).Count(&count)
 
@@ -89,13 +101,6 @@ func GetCurrentCount(uid string) int {
 
 // InsertEnvelope 插入红包
 func InsertEnvelope(envelope entity.Envelope) {
-	db, err := GetDB()
-	if err != nil {
-		panic("连接数据库失败, error=" + err.Error())
-	}
-
-	defer db.Close()
-
 	if err := db.Create(&envelope).Error; err != nil {
 		fmt.Println("插入失败", err)
 		return

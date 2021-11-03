@@ -2,8 +2,9 @@ package api
 
 import (
 	"MyEnvelope/dao"
-	"github.com/gin-gonic/gin"
 	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 func OpenHandler(c *gin.Context) {
@@ -25,7 +26,7 @@ func OpenHandler(c *gin.Context) {
 	if value > 0 {
 		c.JSON(200, gin.H{
 			"code": 0,
-			"msg":  "Success",
+			"msg":  "success",
 			"data": gin.H{
 				"value": value,
 			},
@@ -33,7 +34,7 @@ func OpenHandler(c *gin.Context) {
 	} else {
 		c.JSON(200, gin.H{
 			"code": 1,
-			"msg":  "Given user don't have such envelope",
+			"msg":  "no such envelope",
 			"data": gin.H{
 				"value": value,
 			},

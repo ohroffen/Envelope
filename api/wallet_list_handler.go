@@ -2,8 +2,9 @@ package api
 
 import (
 	"MyEnvelope/dao"
-	"github.com/gin-gonic/gin"
 	"log"
+
+	"github.com/gin-gonic/gin"
 )
 
 func WalletListHandler(c *gin.Context) {
@@ -20,7 +21,7 @@ func WalletListHandler(c *gin.Context) {
 	if amountOfEnvelopes == 0 {
 		c.JSON(200, gin.H{
 			"code": 1,
-			"msg":  "Amount of envelope is 0",
+			"msg":  "no envelope",
 			"data": gin.H{
 				"amount":        amountOfEnvelopes,
 				"envelope_list": envelopes,
