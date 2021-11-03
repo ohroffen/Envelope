@@ -6,6 +6,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-basic/uuid v1.0.0
+	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/jinzhu/gorm v1.9.16
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.9.0
@@ -28,6 +29,8 @@ require (
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/onsi/ginkgo v1.16.5 // indirect
+	github.com/onsi/gomega v1.16.0 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
