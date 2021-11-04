@@ -20,7 +20,10 @@ func OpenHandler(c *gin.Context) {
 
 	// 修改红包状态为打开状态
 	envelope.Opened = true
-	dao.UpdateOpenState(&envelope)
+
+	go func() {
+		dao.UpdateOpenState(&envelope)
+	}()
 	// logic end
 
 	if value > 0 {
