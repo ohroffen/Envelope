@@ -22,9 +22,26 @@ func SnatchHandlerRedis(c *gin.Context) {
 		})
 		return
 	}
-	//建立一个事务，redis事务不会被打乱，但是其实是可以被打乱的，只要不是同一个uid
-	//加入事务的命令暂时进入到任务队列中，并没有立即执行，只有执行exec命令才开始执行
-	//pipe := my_redis.Rdb.TxPipeline()
+
+	//对当前用户增加一个锁，如果没有拿到当前锁，则再次发送请求
+	iCount := 5
+	for i:=0 ; i< iCount; i++{
+		lockSuccess, err := my_redis.Rdb.SetNX(uid+"valid",1,time.Second*2).Result()
+		if err != nil || lockSuccess != true{
+			log.Printf("%v get lock fail %v",uid,err)
+			if i== iCount-1{
+				my_redis.UnLock(uid)
+				c.JSON(200, gin.H{
+					"code": 5,
+					"msg":  "too many requests",
+				})
+				return
+			}
+		} else{
+			log.Printf("%v get lock success",uid)
+			break
+		}
+	}
 
 	// logic start
 	//1、在redis中校验用户是否还有剩余次数
@@ -37,6 +54,7 @@ func SnatchHandlerRedis(c *gin.Context) {
 	//log.Printf("%v",curCount)不存在的话为0
 	if curCount >= algo.MaxSnatchCount {
 		//pipe.Exec()
+		my_redis.UnLock(uid)
 		c.JSON(200, gin.H{
 			"code": 2,
 			"msg":  "Sorry, you have used up your snatch count",
@@ -48,6 +66,7 @@ func SnatchHandlerRedis(c *gin.Context) {
 	algo.Init()
 	if rand.Float64() > algo.SnatchRatio {
 		//pipe.Exec()
+		my_redis.UnLock(uid)
 		c.JSON(200, gin.H{
 			"code": 1,
 			"msg":  "Sorry, you didn't catch the envelope. Good luck next time!",
@@ -59,6 +78,7 @@ func SnatchHandlerRedis(c *gin.Context) {
 	money, err := my_redis.Rdb.LPop("envelope_list").Result()
 	if err != nil {
 		//pipe.Exec()
+		my_redis.UnLock(uid)
 		c.JSON(200, gin.H{
 			"code": 3,
 			"msg":  "Sorry, There is no red envelope left!",
@@ -68,13 +88,12 @@ func SnatchHandlerRedis(c *gin.Context) {
 
 	//增加用户抢红包次数
 	curCount = int(my_redis.Rdb.Incr(uid).Val())
+	//释放锁，因为后面的逻辑与红包剩余数量无关，所以可以提前释放，没有必要等到函数返回
+	my_redis.UnLock(uid)
+
 	envelopeId := uuid.New()
 	snatchTime := time.Now().Unix()//获得当前时间戳，单位为s
 	//将红包id添加到用户的未拆set中
-	//my_redis.Rdb.ZAdd(uid+"closed", &redis.Z{
-	//	Score: 0,
-	//	Member: 2,
-	//})
 	my_redis.Rdb.ZAdd(uid+"closed", redis.Z{
 		Score: float64(snatchTime),
 		Member: envelopeId,

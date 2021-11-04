@@ -38,7 +38,7 @@ func main() {
 	//清空之前的缓存，云redis没有权限执行FlushDB()，必须手动删除
 	//my_redis.Rdb.FlushDB()
 	//缓存预热
-	my_redis.PreAllocated()
+	//my_redis.PreAllocated()
 
 	r := gin.Default()
 
