@@ -4,11 +4,12 @@ import (
 	"MyEnvelope/algo"
 	"MyEnvelope/dao"
 	entity "MyEnvelope/model"
-	"github.com/gin-gonic/gin"
-	"github.com/go-basic/uuid"
 	"log"
 	"math/rand"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-basic/uuid"
 )
 
 func SnatchHandler(c *gin.Context) {
@@ -20,17 +21,19 @@ func SnatchHandler(c *gin.Context) {
 
 	// 一定概率是否抢到
 	algo.Init()
+
+	// 获取该用户红包数，可以使用redis缓存进行优化
+	currCount := dao.GetCurrentCount(uid)
+
 	if rand.Float64() < algo.SnatchRatio ||
 		algo.TotalAmountOfEnvelope == 0 ||
 		algo.TotalAmountOfMoney == 0 {
-		// 获取该用户红包数，可以使用redis缓存进行优化
-		currCount := dao.GetCurrentCount(uid)
 
 		// 判断该用户红包次数是否用尽
 		if currCount >= algo.MaxSnatchCount {
 			c.JSON(200, gin.H{
 				"code": 2,
-				"msg":  "Sorry, you have used up your snatch count",
+				"msg":  "snatch count used up",
 				"data": gin.H{
 					"envelope_id": "",
 					"max_count":   algo.MaxSnatchCount,
@@ -44,7 +47,7 @@ func SnatchHandler(c *gin.Context) {
 				// 没有抢到红包
 				c.JSON(200, gin.H{
 					"code": 1,
-					"msg":  "Sorry, you didn't catch the envelope. Good luck next time!",
+					"msg":  "no more envelope",
 					"data": gin.H{
 						"envelope_id": "",
 						"max_count":   algo.MaxSnatchCount,
@@ -78,11 +81,11 @@ func SnatchHandler(c *gin.Context) {
 	} else { // 没有抢到红包
 		c.JSON(200, gin.H{
 			"code": 1,
-			"msg":  "Sorry, you didn't catch the envelope. Good luck next time!",
+			"msg":  "miss the envelope!",
 			"data": gin.H{
 				"envelope_id": "",
 				"max_count":   algo.MaxSnatchCount,
-				"cur_count":   0,
+				"cur_count":   currCount,
 			},
 		})
 	}
