@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
+	"github.com/spf13/viper"
 )
 
 var db *gorm.DB
@@ -14,16 +15,16 @@ var db *gorm.DB
 func InitDB() {
 
 	//配置MySQL连接参数
-	username := "root"
-	password := "123456"
-	host := "47.100.196.232"
-	port := 3306
-	Dbname := "envelope_rains"
+	username := viper.GetString("db.username")
+	password := viper.GetString("db.password")
+	host := viper.GetString("db.host")
+	port := viper.GetString("db.port")
+	Dbname := viper.GetString("db.name")
 
 	//通过前面的数据库参数，拼接MYSQL DSN， 其实就是数据库连接串（数据源名称）
 	//MYSQL dsn格式： {username}:{password}@tcp({host}:{port})/{Dbname}?charset=utf8&parseTime=True&loc=Local
 	//类似{username}使用花括号包着的名字都是需要替换的参数
-	dsn := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		username, password, host, port, Dbname)
 
 	//连接MYSQL，好像默认是开启事务的

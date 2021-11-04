@@ -1,11 +1,12 @@
 package utils
 
 import (
-	"fmt"
+    "MyEnvelope/algo"
+    "fmt"
     "os"
 
-	"github.com/fsnotify/fsnotify"
-	"github.com/spf13/viper"
+    "github.com/fsnotify/fsnotify"
+    "github.com/spf13/viper"
 )
 
 type Config struct {
@@ -26,27 +27,28 @@ func Run(cfg string) error {
     return nil
 }
 func (c *Config) init() error {
-    v:=viper.New()
+    v := viper.New()
     v.AddConfigPath("./configs")
     v.SetConfigType("yaml")
     v.SetConfigName("default")
-    err:= v.ReadInConfig()
-    if err!=nil {
+    err := v.ReadInConfig()
+    if err != nil {
         panic(fmt.Errorf("Fatal error config file: %s \n", err))
     }
     cfgs := v.AllSettings()
 
-    for k, v:= range cfgs {
-        viper.SetDefault(k,v)
+    for k, v := range cfgs {
+        viper.SetDefault(k, v)
     }
-    
+    viper.SetConfigFile("./configs/default.yaml")
+
     if c.Name != "" {
         viper.AddConfigPath("./configs")
         viper.SetConfigName(c.Name)
         viper.SetConfigType("yaml")
         err = viper.ReadInConfig()
-        if err != nil{
-        panic(fmt.Errorf("Fatal error config file: %s \n", err))
+        if err != nil {
+            panic(fmt.Errorf("Fatal error config file: %s \n", err))
         }
     }
 
@@ -57,8 +59,8 @@ func (c *Config) init() error {
         viper.AddConfigPath("./configs")
         viper.SetConfigType("yaml")
         err = viper.ReadInConfig()
-        if err != nil{
-            panic(fmt.Errorf("Fatal error config file: %s \n",err))
+        if err != nil {
+            panic(fmt.Errorf("Fatal error config file: %s \n", err))
         }
     }
 
@@ -66,8 +68,10 @@ func (c *Config) init() error {
 }
 
 func (c *Config) watchConfig() {
+    fmt.Println("start watch config")
     viper.WatchConfig()
     viper.OnConfigChange(func(e fsnotify.Event) {
         fmt.Println("Config file changed:", e.Name)
+        algo.InitConfig()
     })
 }

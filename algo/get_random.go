@@ -1,19 +1,32 @@
 package algo
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
-var TotalAmountOfMoney int64 = 100 * 100 // 红包雨总预算
-var TotalAmountOfEnvelope int64 = 30     // 红包总个数
+var TotalAmountOfMoney int64 = viper.GetInt64("enve.total")     // 红包雨总预算
+var TotalAmountOfEnvelope int64 = viper.GetInt64("enve.number") // 红包总个数
 
-const (
-	SnatchRatio    float64 = 0.8       // 多大概率抢到红包，[0, 1.0)之间
-	MaxSnatchCount int     = 5         // 每个人能抢的红包总个数
-	MaxAmount      int64   = 100 * 100 // 单个红包最大金额
-	MinAmount      int64   = 50        // 单个红包最小金额
+var (
+	SnatchRatio    float64 = viper.GetFloat64("enve.snatch_ratio") // 多大概率抢到红包，[0, 1.0)之间
+	MaxSnatchCount int     = viper.GetInt("enve.per_count")        // 每个人能抢的红包总个数
+	MaxAmount      int64   = viper.GetInt64("enve.per_max")        // 单个红包最大金额
+	MinAmount      int64   = viper.GetInt64("enve.per_min")        // 单个红包最小金额
 )
+
+func InitConfig() {
+	TotalAmountOfMoney = viper.GetInt64("enve.total")     // 红包雨总预算
+	TotalAmountOfEnvelope = viper.GetInt64("enve.number") // 红包总个数
+
+	SnatchRatio = viper.GetFloat64("enve.snatch_ratio") // 多大概率抢到红包，[0, 1.0)之间
+	MaxSnatchCount = viper.GetInt("enve.per_count")     // 每个人能抢的红包总个数
+	MaxAmount = viper.GetInt64("enve.per_max")          // 单个红包最大金额
+	MinAmount = viper.GetInt64("enve.per_min")          // 单个红包最小金额
+}
 
 // GetRandomMoney
 // 调用者负责维护剩余红包数量与剩余总金额
@@ -90,4 +103,6 @@ func GetRandomMoney() int64 {
 func Init() {
 	// 初始化随机数的资源库，如果不执行这行，不管运行多少次都返回同样的值
 	rand.Seed(time.Now().UnixNano())
+
+	fmt.Println(TotalAmountOfEnvelope, TotalAmountOfMoney, SnatchRatio, MaxSnatchCount, MaxAmount, MinAmount)
 }
