@@ -44,7 +44,7 @@ func SnatchHandler(c *gin.Context) {
 			// 根据random返回值判断是否还有足够金额
 			value := algo.GetRandomMoney()
 			if value == 0 {
-				// 没有抢到红包
+				// 没有红包了
 				c.JSON(200, gin.H{
 					"code": 1,
 					"msg":  "no more envelope",
@@ -64,7 +64,10 @@ func SnatchHandler(c *gin.Context) {
 					SnatchTime: entity.UnixTime(time.Now()),
 				}
 
-				dao.InsertEnvelope(envelope)
+				// 开一个协程异步地在后台写数据
+				go func() {
+					dao.InsertEnvelope(envelope)
+				}()
 
 				// logic end
 				c.JSON(200, gin.H{
@@ -80,7 +83,7 @@ func SnatchHandler(c *gin.Context) {
 		}
 	} else { // 没有抢到红包
 		c.JSON(200, gin.H{
-			"code": 1,
+			"code": 3,
 			"msg":  "miss the envelope!",
 			"data": gin.H{
 				"envelope_id": "",

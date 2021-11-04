@@ -33,7 +33,7 @@ func OpenHandler(c *gin.Context) {
 		})
 	} else {
 		c.JSON(200, gin.H{
-			"code": 1,
+			"code": 5, // 用户ID或红包ID错误
 			"msg":  "no such envelope",
 			"data": gin.H{
 				"value": value,

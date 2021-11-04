@@ -20,7 +20,7 @@ func WalletListHandler(c *gin.Context) {
 	// 各种特殊情况应该返回什么状态码
 	if amountOfEnvelopes == 0 {
 		c.JSON(200, gin.H{
-			"code": 1,
+			"code": 4, // 用户ID错误
 			"msg":  "no envelope",
 			"data": gin.H{
 				"amount":        amountOfEnvelopes,
