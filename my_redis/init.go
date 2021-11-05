@@ -11,7 +11,7 @@ import (
 var Rdb *redis.Client
 
 //初始化redis
-func InitRedis() error{
+func InitRedis() error {
 	Rdb = redis.NewClient(&redis.Options{
 		//Addr: "redis-cn02pak6xbbkuiu9x.redis.volces.com:6379",
 		Addr: viper.GetString("redis.host"),
@@ -19,7 +19,7 @@ func InitRedis() error{
 		//Password: "Group12345678",
 		Password: viper.GetString("redis.password"),
 		//Password: "",
-		DB:0,//数据库的索引
+		DB:       0,   //数据库的索引
 		PoolSize: 100, //连接池大小
 	})
 	_, err := Rdb.Ping().Result()
@@ -30,11 +30,11 @@ func InitRedis() error{
 func PreAllocated() {
 	for algo.TotalAmountOfEnvelope > int64(0) {
 		money := algo.GetRandomMoney()
-		n, err := Rdb.LPush("envelope_list",money).Result()
-		if err != nil{
-			log.Printf("insert failed, %v",err)
-		}else{
-			log.Printf("insert success %v,the value is %v",n,money)
+		n, err := Rdb.LPush("envelope_list", money).Result()
+		if err != nil {
+			log.Printf("insert failed, %v", err)
+		} else {
+			log.Printf("insert success %v,the value is %v", n, money)
 		}
 	}
 }

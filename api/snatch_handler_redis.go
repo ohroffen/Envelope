@@ -3,19 +3,31 @@ package api
 import (
 	"MyEnvelope/algo"
 	"MyEnvelope/my_redis"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/go-basic/uuid"
-	"github.com/go-redis/redis"
 	"log"
 	"math/rand"
 	"strconv"
 	"time"
 )
 
+//定义红包信息结构体
+type EnvelopeInfo struct {
+	SnatchTime int64
+	Money      int64
+	Opened     bool
+}
+
+//结构体序列化
+func (e EnvelopeInfo) MarshalBinary() ([]byte, error) {
+	return json.Marshal(e)
+}
+
 func SnatchHandlerRedis(c *gin.Context) {
 	uid, _ := c.GetPostForm("uid")
 	log.Printf("snatched by %s", uid)
-	if uid == ""{
+	if uid == "" {
 		c.JSON(200, gin.H{
 			"code": 4,
 			"msg":  "uid is empty",
@@ -23,53 +35,48 @@ func SnatchHandlerRedis(c *gin.Context) {
 		return
 	}
 
-	//对当前用户增加一个锁，如果没有拿到当前锁，则再次发送请求
+	// logic start
+	//1、判断用户是否在一定概率能抢到
+	algo.Init()
+	if rand.Float64() > algo.SnatchRatio {
+		//pipe.Exec()
+		c.JSON(200, gin.H{
+			"code": 1,
+			"msg":  "Sorry, you didn't catch the envelope. Good luck next time!",
+		})
+		return
+	}
+
+	//程序退出时解锁
+	defer my_redis.UnLock(uid)
+	//对当前用户增加一个锁，如果没有拿到当前锁，则间隔5ms的时间再次发送请求
 	iCount := 5
-	for i:=0 ; i< iCount; i++{
-		lockSuccess, err := my_redis.Rdb.SetNX(uid+"valid",1,time.Second*2).Result()
-		if err != nil || lockSuccess != true{
-			log.Printf("%v get lock fail %v",uid,err)
-			if i== iCount-1{
-				my_redis.UnLock(uid)
+	for i := 0; i < iCount; i++ {
+		lockSuccess, err := my_redis.Rdb.SetNX(uid+"valid", 1, time.Second*2).Result()
+		if err != nil || lockSuccess != true {
+			log.Printf("%v get lock fail %v", uid, err)
+			if i == iCount-1 {
 				c.JSON(200, gin.H{
 					"code": 5,
 					"msg":  "too many requests",
 				})
 				return
 			}
-		} else{
-			log.Printf("%v get lock success",uid)
+		} else {
+			log.Printf("%v get lock success", uid)
 			break
 		}
+		time.Sleep(3 * time.Millisecond)
 	}
 
-	// logic start
-	//1、在redis中校验用户是否还有剩余次数
-	curCountStr, err := my_redis.Rdb.Get(uid).Result()
-	if err != nil{
-		my_redis.Rdb.Set(uid,0,0)
-		my_redis.Rdb.HSet("user_money",uid,0)
-	}
+	//2、在redis中校验用户是否还有剩余次数
+	curCountStr, _ := my_redis.Rdb.HGet("user_count", uid).Result()
 	curCount, _ := strconv.Atoi(curCountStr)
 	//log.Printf("%v",curCount)不存在的话为0
 	if curCount >= algo.MaxSnatchCount {
-		//pipe.Exec()
-		my_redis.UnLock(uid)
 		c.JSON(200, gin.H{
 			"code": 2,
 			"msg":  "Sorry, you have used up your snatch count",
-		})
-		return
-	}
-
-	//2、判断用户是否在一定概率能抢到
-	algo.Init()
-	if rand.Float64() > algo.SnatchRatio {
-		//pipe.Exec()
-		my_redis.UnLock(uid)
-		c.JSON(200, gin.H{
-			"code": 1,
-			"msg":  "Sorry, you didn't catch the envelope. Good luck next time!",
 		})
 		return
 	}
@@ -78,7 +85,6 @@ func SnatchHandlerRedis(c *gin.Context) {
 	money, err := my_redis.Rdb.LPop("envelope_list").Result()
 	if err != nil {
 		//pipe.Exec()
-		my_redis.UnLock(uid)
 		c.JSON(200, gin.H{
 			"code": 3,
 			"msg":  "Sorry, There is no red envelope left!",
@@ -87,35 +93,27 @@ func SnatchHandlerRedis(c *gin.Context) {
 	}
 
 	//增加用户抢红包次数
-	curCount = int(my_redis.Rdb.Incr(uid).Val())
-	//释放锁，因为后面的逻辑与红包剩余数量无关，所以可以提前释放，没有必要等到函数返回
-	my_redis.UnLock(uid)
-
+	curCount++
+	my_redis.Rdb.HSet("user_count", uid, curCount)
+	//my_redis.Rdb.HIncrBy("user_count", uid, int64(1))
 	envelopeId := uuid.New()
-	snatchTime := time.Now().Unix()//获得当前时间戳，单位为s
+	snatchTime := time.Now().Unix() //获得当前时间戳，单位为s
+	amount, _ := strconv.ParseInt(money, 10, 64)
 	//将红包id添加到用户的未拆set中
-	my_redis.Rdb.ZAdd(uid+"closed", redis.Z{
-		Score: float64(snatchTime),
-		Member: envelopeId,
-	})
-	//设置红包与对应金额之间的联系hash
-	my_redis.Rdb.HSet("envelope_money",envelopeId,money)
+	envelopeInfo := EnvelopeInfo{
+		SnatchTime: snatchTime,
+		Money:      amount,
+		Opened:     false,
+	}
+	result, errInfo := my_redis.Rdb.HSet(uid+"list", envelopeId, envelopeInfo).Result()
+	if errInfo != nil {
+		log.Printf("list set error,%v", errInfo)
+	} else {
+		log.Printf("%v insert envelope %v is %v", uid, envelopeId, result)
+	}
 
 	//todo 4、红包入消息队列
-	//4、用户已经抢到红包，需要插入到数据库中
-	//生成红包实体
-	//value, err := strconv.ParseInt(money, 10, 64)
-	//envelope := entity.Envelope{
-	//	EnvelopeID: envelopeId,
-	//	UserID:     uid,
-	//	Opened:     false,
-	//	Value:      value,
-	//	SnatchTime: entity.UnixTime(snatchTime),
-	//}
-	////todo 插入失败的情况还没有做处理，不是很确定应该在这里进行插入
-	//dao.InsertEnvelope(envelope)
 
-	//pipe.Exec()
 	c.JSON(200, gin.H{
 		"code": 0,
 		"msg":  "success",

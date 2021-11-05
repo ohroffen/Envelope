@@ -29,9 +29,9 @@ func main() {
 	algo.InitConfig()
 
 	//初始化Redis
-	if err := my_redis.InitRedis(); err != nil{
-		log.Printf("init my_redis client failed, err:%v\n",err)
-	}else{
+	if err := my_redis.InitRedis(); err != nil {
+		log.Printf("init my_redis client failed, err:%v\n", err)
+	} else {
 		log.Printf("connect my_redis success...")
 	}
 	defer my_redis.Rdb.Close()
