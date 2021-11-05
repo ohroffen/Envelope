@@ -8,10 +8,10 @@ import (
 // Envelope 获取用户当前红包数，可以单独设置一个该用户当前红包数（需要分表）
 // 或者使用select count(*)
 type Envelope struct {
-	EnvelopeID string `gorm:"column:envelope_id" json:"envelope_id"`
-	UserID string `gorm:"column:user_id" json:"-"`
-	Opened bool `gorm:"column:opened" json:"opened"`
-	Value int64 `gorm:"column:value" json:"value,omitempty"`
+	EnvelopeID string   `gorm:"column:envelope_id" json:"envelope_id"`
+	UserID     string   `gorm:"column:user_id" json:"-"`
+	Opened     bool     `gorm:"column:opened" json:"opened"`
+	Value      int64    `gorm:"column:value" json:"value,omitempty"`
 	SnatchTime UnixTime `gorm:"column:snatch_time" json:"snatch_time"`
 	//CurrentCount int32 `gorm:"current_count"`
 }
