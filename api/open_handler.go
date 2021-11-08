@@ -1,10 +1,14 @@
 package api
 
 import (
+	"MyEnvelope/entity"
+	"MyEnvelope/mq"
 	"MyEnvelope/my_redis"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
 	"log"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 func OpenHandler(c *gin.Context) {
@@ -34,9 +38,18 @@ func OpenHandler(c *gin.Context) {
 	json.Unmarshal([]byte(resultStr), &envelopeInfo)
 
 	//todo 不确定是否需要增加另一个状态，重复拆红包
-	if envelopeInfo.Opened == false {
+	if !envelopeInfo.Opened {
 		envelopeInfo.Opened = true
 		my_redis.Rdb.HSet(uid+"list", envelopeId, envelopeInfo)
+		num_envelopeId, _ := strconv.ParseInt(envelopeId, 10, 64)
+		num_uid, _ := strconv.ParseInt(uid, 10, 64)
+		mq.Send_message(&entity.Envelope{
+			EnvelopeID: num_envelopeId,
+			UserID:     num_uid,
+			Opened:     true,
+			Value:      envelopeInfo.Money,
+			SnatchTime: envelopeInfo.SnatchTime,
+		})
 	}
 	//Attention: 在拆红包接口没有将金额入账，而是选择在获取红包列表的时候更新
 
