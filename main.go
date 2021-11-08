@@ -3,7 +3,6 @@ package main
 import (
 	"MyEnvelope/algo"
 	"MyEnvelope/api"
-	"MyEnvelope/dao"
 	"MyEnvelope/my_redis"
 	"MyEnvelope/utils"
 	"fmt"
@@ -25,7 +24,6 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(viper.AllSettings())
-	dao.InitDB()
 	algo.InitConfig()
 
 	//初始化Redis
@@ -39,6 +37,9 @@ func main() {
 	//my_redis.Rdb.FlushDB()
 	//缓存预热
 	my_redis.PreAllocated()
+
+	// 初始化 snowflake 节点, 从 Redis 获取节点 Id
+	api.Init_snowflake_node()
 
 	r := gin.Default()
 
