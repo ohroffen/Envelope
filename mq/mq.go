@@ -18,7 +18,7 @@ func Mq_init() {
 		Addr:     kafka.TCP(os.Getenv("KAFKA_HOST")),
 		Topic:    os.Getenv("KAFKA_TOPIC"),
 		Balancer: &kafka.CRC32Balancer{Consistent: false},
-		Async:    false, // wait to be tested
+		Async:    true, // wait to be tested
 	}
 }
 
