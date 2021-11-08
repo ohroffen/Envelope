@@ -14,6 +14,7 @@ import (
 var w *kafka.Writer
 
 func Mq_init() {
+	log.Println(os.Getenv("KAFKA_HOST"))
 	w = &kafka.Writer{
 		Addr:     kafka.TCP(os.Getenv("KAFKA_HOST")),
 		Topic:    os.Getenv("KAFKA_TOPIC"),
