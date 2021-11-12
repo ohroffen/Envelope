@@ -1,10 +1,8 @@
 package my_redis
 
 import (
-	"MyEnvelope/algo"
 	"github.com/go-redis/redis"
 	"github.com/spf13/viper"
-	"log"
 )
 
 //全局的rdb变量
@@ -24,17 +22,4 @@ func InitRedis() error {
 	})
 	_, err := Rdb.Ping().Result()
 	return err
-}
-
-//预热，预先将大红包分配成小红包
-func PreAllocated() {
-	for algo.TotalAmountOfEnvelope > int64(0) {
-		money := algo.GetRandomMoney()
-		n, err := Rdb.LPush("envelope_list", money).Result()
-		if err != nil {
-			log.Printf("insert failed, %v", err)
-		} else {
-			log.Printf("insert success %v,the value is %v", n, money)
-		}
-	}
 }

@@ -18,8 +18,8 @@ func OpenHandler(c *gin.Context) {
 	//参数的合法
 	if uid == "" || envelopeId == "" {
 		c.JSON(200, gin.H{
-			"code": 2,
-			"msg":  "uid or envelopeid is empty",
+			"code": 3,
+			"msg":  "invalid input",
 		})
 		return
 	}
@@ -28,17 +28,21 @@ func OpenHandler(c *gin.Context) {
 	//1、判断用户是否有相应的红包
 	if err != nil {
 		c.JSON(200, gin.H{
-			"code": 1,
-			"msg":  "Given user don't have such envelope",
+			"code": 2,
+			"msg":  "envelope doesn't exist",
 		})
 		return
 	}
 	//2、更改红包状态，直接返回金额，不更新用户总金额
 	envelopeInfo := EnvelopeInfo{}
 	json.Unmarshal([]byte(resultStr), &envelopeInfo)
-
-	//todo 不确定是否需要增加另一个状态，重复拆红包
-	if !envelopeInfo.Opened {
+	if envelopeInfo.Opened {
+		c.JSON(200, gin.H{
+			"code": 1,
+			"msg":  "already opened",
+		})
+		return
+	} else {
 		envelopeInfo.Opened = true
 		my_redis.Rdb.HSet(uid+"list", envelopeId, envelopeInfo)
 		num_envelopeId, _ := strconv.ParseInt(envelopeId, 10, 64)

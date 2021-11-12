@@ -41,8 +41,8 @@ func WalletListHandler(c *gin.Context) {
 	log.Printf("query %s's wallet", uid)
 	if uid == "" {
 		c.JSON(200, gin.H{
-			"code": 2,
-			"msg":  "uid is empty",
+			"code": 1,
+			"msg":  "invalid input",
 		})
 		return
 	}
@@ -56,10 +56,11 @@ func WalletListHandler(c *gin.Context) {
 	length := len(userEnvelopeList)
 	if length == 0 {
 		c.JSON(200, gin.H{
-			"code": 1,
-			"msg":  "envelope list is empty",
+			"code": 0,
+			"msg":  "success",
 			"data": gin.H{
-				"amount": 0,
+				"amount":        0,
+				"envelope_list": "",
 			},
 		})
 		return

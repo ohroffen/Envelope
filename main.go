@@ -34,10 +34,6 @@ func main() {
 		log.Printf("connect my_redis success...")
 	}
 	defer my_redis.Rdb.Close()
-	//清空之前的缓存，云redis没有权限执行FlushDB()，必须手动删除
-	//my_redis.Rdb.FlushDB()
-	//缓存预热
-	//my_redis.PreAllocated()
 
 	// 初始化 snowflake 节点, 从 Redis 获取节点 Id
 	api.Init_snowflake_node()
@@ -51,6 +47,7 @@ func main() {
 	r.POST("/open", api.OpenHandler)
 	r.POST("/get_wallet_list", api.WalletListHandler)
 	err := r.Run(":9090")
+
 	if err != nil {
 		return
 	} //监听并在127.0.0.1:9090. 上启动服务
