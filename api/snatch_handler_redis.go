@@ -47,6 +47,7 @@ func SnatchHandlerRedis(c *gin.Context) {
 		return
 	}
 
+	/*
 	//程序退出时解锁
 	defer my_redis.UnLock(uid)
 	//对当前用户增加一个锁，如果没有拿到当前锁，则间隔5ms的时间再次发送请求
@@ -68,12 +69,15 @@ func SnatchHandlerRedis(c *gin.Context) {
 		}
 		time.Sleep(3 * time.Millisecond)
 	}
+	*/
 
 	//2、在redis中校验用户是否还有剩余次数
-	curCountStr, _ := my_redis.Rdb.HGet("user_count", uid).Result()
-	curCount, _ := strconv.Atoi(curCountStr)
+	//curCountStr, _ := my_redis.Rdb.HGet("user_count", uid).Result()
+	//curCountStr, _ := my_redis.Rdb.HGet("user_count", uid).Result()
+	curCount, _ := my_redis.Rdb.HIncrBy("user_count", uid, int64(1)).Result()
+	//curCountStr, _ := curCount, _ := strconv.Atoi(curCountStr)
 	//log.Printf("%v",curCount)不存在的话为0
-	if curCount >= algo.MaxSnatchCount {
+	if curCount > int64(algo.MaxSnatchCount) {
 		c.JSON(200, gin.H{
 			"code": 2,
 			"msg":  "Sorry, you have used up your snatch count",
@@ -84,7 +88,8 @@ func SnatchHandlerRedis(c *gin.Context) {
 	//3、判断队列中是否还有剩余的红包，存在或者直接出队列
 	money, err := my_redis.Rdb.LPop("envelope_list").Result()
 	if err != nil {
-		//pipe.Exec()
+		//将用户增加的抢红包数要减1
+		my_redis.Rdb.HSet("user_count", uid, curCount-1).Result()
 		c.JSON(200, gin.H{
 			"code": 3,
 			"msg":  "Sorry, There is no red envelope left!",
@@ -93,8 +98,8 @@ func SnatchHandlerRedis(c *gin.Context) {
 	}
 
 	//增加用户抢红包次数
-	curCount++
-	my_redis.Rdb.HSet("user_count", uid, curCount)
+	//curCount++
+	//my_redis.Rdb.HSet("user_count", uid, curCount)
 	//my_redis.Rdb.HIncrBy("user_count", uid, int64(1))
 	envelopeId := uuid.New()
 	snatchTime := time.Now().Unix() //获得当前时间戳，单位为s
