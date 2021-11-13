@@ -5,6 +5,7 @@ import (
 	"MyEnvelope/api"
 	"MyEnvelope/mq"
 	"MyEnvelope/my_redis"
+	"MyEnvelope/ratelimiter"
 	"MyEnvelope/utils"
 	"fmt"
 	"log"
@@ -41,6 +42,8 @@ func main() {
 	mq.Mq_init()
 
 	r := gin.Default()
+
+	r.Use(ratelimiter.TokenRateLimiter())
 
 	// router
 	r.POST("/snatch", api.SnatchHandlerRedis)
