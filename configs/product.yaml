@@ -12,5 +12,5 @@ enve:
   per_min: 1
 
 redis:
-  host: "redis-cn02pak6xbbkuiu9x.redis.ivolces.com:6380"
+    host: "redis-cn02nwh9l8hdm1gmx.redis.ivolces.com:6379"
   password: "Group12345678"
