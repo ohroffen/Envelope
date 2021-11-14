@@ -8,7 +8,7 @@ import (
 func TestGetRandomMoney(t *testing.T) {
 
 	moneyArr := make([]int64, 0)
-	for TotalAmountOfEnvelope > 0 {
+	for ;TotalAmountOfEnvelope > 0; {
 		x := GetRandomMoney()
 		moneyArr = append(moneyArr, x)
 	}

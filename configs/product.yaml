@@ -2,15 +2,3 @@ db:
   host: rdsmysqlhf6ed4fde2675f947.rds.ivolces.com
   username: group8
   password: "Group12345678"
-
-enve:
-  total: 100000
-  number: 300
-  snatch_ratio: 0.8
-  per_count: 50
-  per_max: 10
-  per_min: 1
-
-redis:
-    host: "redis-cn02nwh9l8hdm1gmx.redis.ivolces.com:6379"
-  password: "Group12345678"
