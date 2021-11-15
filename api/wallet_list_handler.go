@@ -1,11 +1,12 @@
 package api
 
 import (
-	"MyEnvelope/my_redis"
+	"MyEnvelope/redis"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
 	"log"
 	"sort"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Pair struct {
@@ -52,7 +53,7 @@ func WalletListHandler(c *gin.Context) {
 	// 按时间排序
 	//version 2
 	allAmount := int64(0)
-	userEnvelopeList, _ := my_redis.Rdb.HGetAll(uid + "list").Result()
+	userEnvelopeList, _ := redis.Rdb.HGetAll(uid + "list").Result()
 	length := len(userEnvelopeList)
 	if length == 0 {
 		c.JSON(200, gin.H{
@@ -73,7 +74,7 @@ func WalletListHandler(c *gin.Context) {
 		snatchTime := pairList[i].Value.SnatchTime
 		money := pairList[i].Value.Money
 		opened := pairList[i].Value.Opened
-		if opened == false {
+		if !opened {
 			temp := gin.H{
 				"envelope_id": envelopeId,
 				"opened":      false,

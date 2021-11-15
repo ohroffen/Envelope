@@ -3,7 +3,7 @@ package api
 import (
 	"MyEnvelope/entity"
 	"MyEnvelope/mq"
-	"MyEnvelope/my_redis"
+	"MyEnvelope/redis"
 	"encoding/json"
 	"log"
 	"strconv"
@@ -24,7 +24,7 @@ func OpenHandler(c *gin.Context) {
 		return
 	}
 
-	resultStr, err := my_redis.Rdb.HGet(uid+"list", envelopeId).Result()
+	resultStr, err := redis.Rdb.HGet(uid+"list", envelopeId).Result()
 	//1、判断用户是否有相应的红包
 	if err != nil {
 		c.JSON(200, gin.H{
@@ -44,7 +44,7 @@ func OpenHandler(c *gin.Context) {
 		return
 	} else {
 		envelopeInfo.Opened = true
-		my_redis.Rdb.HSet(uid+"list", envelopeId, envelopeInfo)
+		redis.Rdb.HSet(uid+"list", envelopeId, envelopeInfo)
 		num_envelopeId, _ := strconv.ParseInt(envelopeId, 10, 64)
 		num_uid, _ := strconv.ParseInt(uid, 10, 64)
 		mq.Send_message(&entity.Envelope{
