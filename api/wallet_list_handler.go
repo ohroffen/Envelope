@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"sort"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,6 +44,15 @@ func WalletListHandler(c *gin.Context) {
 	if uid == "" {
 		c.JSON(200, gin.H{
 			"code": 1,
+			"msg":  "invalid input",
+		})
+		return
+	}
+
+	_, err := strconv.Atoi(uid)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"code": 4,
 			"msg":  "invalid input",
 		})
 		return
