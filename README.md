@@ -39,8 +39,8 @@
 
 ```json
 {
-	"code": 0,
-	"msg":  "success", // 成功则code=0，否则为其他（请自行定义各类错误）
+	"code": 0, // 成功则code=0，否则为其他
+	"msg":  "success", 
 	"data": {
         "envelope_id": 123, // 红包id
         "max_count":   5,   // 最多抢几次
@@ -109,7 +109,7 @@
 
 ```json
 {
-    "code": 0, // 成功则code=0，否则为其他（请自行定义各类错误）
+    "code": 0, // 成功则code=0，否则为其他
     "msg": "success",
     "data": {
         "amount": 112, // 钱包总额，“分”为单位
