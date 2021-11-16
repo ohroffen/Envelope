@@ -49,6 +49,14 @@ func SnatchHandlerRedis(c *gin.Context) {
 		})
 		return
 	}
+	_, err := strconv.Atoi(uid)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"code": 4,
+			"msg":  "invalid input",
+		})
+		return
+	}
 
 	// logic start
 	//1、判断用户是否在一定概率能抢到
