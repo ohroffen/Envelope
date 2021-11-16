@@ -52,7 +52,7 @@ func WalletListHandler(c *gin.Context) {
 	_, err := strconv.Atoi(uid)
 	if err != nil {
 		c.JSON(200, gin.H{
-			"code": 4,
+			"code": 1,
 			"msg":  "invalid input",
 		})
 		return
