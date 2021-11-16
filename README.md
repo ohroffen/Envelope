@@ -40,7 +40,7 @@
 ```json
 {
 	"code": 0,
-	"msg":  "success",      // 成功则code=0，否则为其他（请自行定义各类错误）
+	"msg":  "success", // 成功则code=0，否则为其他（请自行定义各类错误）
 	"data": {
         "envelope_id": 123, // 红包id
         "max_count":   5,   // 最多抢几次
@@ -67,7 +67,7 @@
 
 ```json
 {
-    "uid": 123		   // 用户id
+    "uid": 123, // 用户id
     "envelope_id": 123 // 红包id
 }
 ```
