@@ -23,6 +23,22 @@ func OpenHandler(c *gin.Context) {
 		})
 		return
 	}
+	_, err := strconv.Atoi(uid)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"code": 3,
+			"msg":  "invalid input",
+		})
+		return
+	}
+	_, err = strconv.Atoi(envelopeId)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"code": 3,
+			"msg":  "invalid input",
+		})
+		return
+	}
 
 	resultStr, err := my_redis.Rdb.HGet(uid+"list", envelopeId).Result()
 	//1、判断用户是否有相应的红包
@@ -59,7 +75,7 @@ func OpenHandler(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"code": 0,
-		"msg":  "Success",
+		"msg":  "success",
 		"data": gin.H{
 			"value": envelopeInfo.Money,
 		},
