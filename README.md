@@ -1,67 +1,139 @@
-# MyEnvelope
+# Envelope
 
-#### 介绍
-红包雨项目
+# 一、项目介绍
+本项目基于`MySQl、Redis、Kafka`实现了一个支持高并发的抢红包后端系统，负责处理前端的抢红包、拆红包、获取红包列表等业务请求。
 
-#### 软件架构
+## 1、系统架构
 
-该项目使用go mod自动进行包管理
-
-**目录说明：**
-
-- model包中定义了保存在数据库中的红包实体
-- algo包中实现了随机生成红包的函数，一些可配置的数据也定义在其中
-- api包中包含处理不同请求的具体实现
-- dao包中实现了对数据库的CRUD操作，以及建表语句
-
-**已实现功能：**
-
-- 一些参数可自定义（暂无持久化代码）；
-- get_wallet_list可显示红包总额、根据是否拆开红包来判断是否显示金额、红包按时间排序
-- 红包ID使用UUID（36个字符），和用户ID一起，都选用字符串作为id（不知道是否会影响效率）
-- 等等......
+<img src="C:\Users\hongt\Pictures\流程图.jpg" alt="流程图"  />
 
 
-#### 安装教程
-测试环境：
 
-go version go1.17.2 windows/amd64
+## 2、目录说明：
 
-mysql 5.7
+`entity`文件夹中定义了保存在数据库中的红包实体。
 
-**换源**
+`api`文件夹中包含处理不同业务请求的具体实现。
 
-> go env -w GO111MODULE=on
-> go env -w GOPROXY=https://goproxy.cn,direct
+`redis`文件夹中包含`redis`初始化相关代码。
 
-#### 使用说明
+`mq`文件夹中包含发送红包消息到`Kafka`的相关代码。
 
-以下提交方式均为post：
+# 二、接口说明
 
-1.  open接口(.../open)，提供uid，envelope_id 
-2.  snatch接口(.../snatch)，提供uid
-3.  get_wallet_list接口(.../get_wallet_list），提供uid
+该项目`URL`访问请求方式均为`POST`，因此请求参数均包含在请求体中。
 
-可以直接通过使用不同uid运行snatch接口来在数据库中插入数据。
+## 抢红包
 
-#### 参与贡献
+**请求`URL`：**`.../snatch`
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+**请求参数：**
 
+```json
+{
+	"uid": 123 // 用户id
+}
+```
 
-#### 特技
+**响应数据：**
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+```json
+{
+	"code": 0, // 成功则code=0，否则为其他
+	"msg":  "success", 
+	"data": {
+        "envelope_id": 123, // 红包id
+        "max_count":   5,   // 最多抢几次
+        "cur_count":   3,   // 当前为第几次抢
+    }
+}
+```
 
+**响应状态码：**
 
-#### 配置管理
+| 注释                     | 业务 code | msg                    |
+| ------------------------ | --------- | ---------------------- |
+| 成功                     | `0`       | `success`              |
+| 未抢到红包               | `1`       | `miss`                 |
+| 用户已抢到上限数量红包   | `2`       | `snatch count used up` |
+| 系统全部红包已经分发完毕 | `3`       | `no more envelope`     |
+| 输入格式错误             | `4`       | `invalid input`        |
 
-思路：将公共配置写入`configs/default.yaml`，通过传入参数/环境变量方式导入特定环境下的配置信息。在部署流水线上可以通过Dockfile设置环境变量，或者设置`go run`语句实现配置导入。
+## 拆红包
+
+**请求`URL`：**`.../open`
+
+**请求参数：**
+
+```json
+{
+    "uid": 123, // 用户id
+    "envelope_id": 123 // 红包id
+}
+```
+
+**响应数据：**
+
+```json
+{
+    "code": 0,        // 成功则code=0，否则为其他
+    "msg": "success",
+    "data": {
+        "value": 50   // 红包金额，以“分”为单位
+    }
+}
+```
+
+**响应状态码：**
+
+| 注释             | 业务 code | msg                      |
+| ---------------- | --------- | ------------------------ |
+| 成功             | `0`       | `success`                |
+| 红包已经开启过   | `1`       | `already opened`         |
+| 用户名下无此红包 | `2`       | `envelope doesn't exist` |
+| 输入格式错误     | `3`       | `invalid input`          |
+
+## 获取红包列表
+
+**请求`URL`：**`.../get_wallet_list`
+
+**请求参数：**
+
+```json
+{
+    "uid": 123 // 用户id
+}
+```
+
+**响应数据：**
+
+```json
+{
+    "code": 0, // 成功则code=0，否则为其他
+    "msg": "success",
+    "data": {
+        "amount": 112, // 钱包总额，“分”为单位
+        "envelope_list": [
+            {
+                "envelope_id": 123,
+                "value": 50, // 红包面值
+                "opened": true, // 是否已拆开
+                "snatch_time": 1634551711 // 红包获取时间，UNIX时间戳
+            },
+            {
+                "envelope_id": 123,
+                "opened": false, // 未拆开的红包不显示value
+                "snatch_time": 1634551711 
+            }
+        ]
+    }
+}
+```
+
+**响应状态码：**
+
+| 注释         | 业务 code | msg             |
+| ------------ | --------- | --------------- |
+| 成功         | `0`       | `success`       |
+| 输入格式错误 | `1`       | `invalid input` |
+
