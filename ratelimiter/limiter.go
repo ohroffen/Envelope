@@ -9,8 +9,8 @@ import (
 	"github.com/juju/ratelimit"
 )
 
-var initialCapacity = int64(5000)
-var createRate = int64(5000)
+var initialCapacity = int64(10000)
+var createRate = int64(10000)
 
 var limiter = ratelimit.NewBucketWithQuantum(
 	time.Second, initialCapacity, createRate)
