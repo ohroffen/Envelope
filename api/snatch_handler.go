@@ -9,9 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
 	"time"
 
 	"github.com/bwmarrin/snowflake"
@@ -28,9 +26,6 @@ var noEnvelopeLeft bool
 func FetchMoney() {
 	amount_channel = make(chan int64, 100)
 	go func() {
-		// 监听 kubernetes 发出的 SIGTERM 信号
-		Terminate = make(chan os.Signal, 1)
-		signal.Notify(Terminate, syscall.SIGTERM)
 		for {
 			select {
 			case <-Terminate:
