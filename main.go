@@ -20,6 +20,8 @@ func main() {
 
 	// 从 Redis 获取抢红包配置数据
 	api.RetrieveSnatchConfig()
+	// 开始获取红包金额
+	api.FetchMoney()
 	// 初始化 kafka writer
 	mq.Mq_init()
 

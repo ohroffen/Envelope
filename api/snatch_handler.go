@@ -8,7 +8,10 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/bwmarrin/snowflake"
@@ -18,6 +21,46 @@ import (
 var node *snowflake.Node
 var prob float64
 var max_count int64
+var amount_channel chan int64
+var Terminate chan os.Signal
+var noEnvelopeLeft bool
+
+func FetchMoney() {
+	amount_channel = make(chan int64, 100)
+	go func() {
+		// 监听 kubernetes 发出的 SIGTERM 信号
+		Terminate = make(chan os.Signal, 1)
+		signal.Notify(Terminate, syscall.SIGTERM)
+		for {
+			select {
+			case <-Terminate:
+				amounts := make([]interface{}, 0)
+				for amount := range amount_channel {
+					amounts = append(amounts, amount)
+				}
+				if _, err := redis.Rdb.LPush("envelope_list", amounts...).Result(); err != nil {
+					log.Fatal("[Fetcher] failed writing envelope amounts back to Redis")
+				}
+				return
+			default:
+				pipe := redis.Rdb.TxPipeline()
+				amounts := pipe.LRange("envelope_list", 0, 49)
+				pipe.LTrim("envelope_list", 50, -1)
+				pipe.Exec()
+				if len(amounts.Val()) == 0 {
+					noEnvelopeLeft = true
+					continue
+				} else if noEnvelopeLeft {
+					noEnvelopeLeft = false
+				}
+				for _, money := range amounts.Val() {
+					amount, _ := strconv.ParseInt(money, 10, 64)
+					amount_channel <- amount
+				}
+			}
+		}
+	}()
+}
 
 func RetrieveSnatchConfig() {
 	// init snowflake node
@@ -96,21 +139,22 @@ func SnatchHandler(c *gin.Context) {
 	}
 
 	//3、判断队列中是否还有剩余的红包，存在或者直接出队列
-	money, err := redis.Rdb.LPop("envelope_list").Result()
-	if err != nil {
+	var amount int64
+	if noEnvelopeLeft && len(amount_channel) == 0 {
 		//将用户多增加的抢红包数要减1
-		redis.Rdb.HSet("user_count", uid, curCount-1).Result()
+		redis.Rdb.HIncrBy("user_count", uid, -1)
 		c.JSON(200, gin.H{
 			"code": 3,
 			"msg":  "no more envelope",
 		})
 		return
+	} else {
+		amount = <-amount_channel
 	}
 
 	//增加用户抢红包次数
 	envelopeId := int64(node.Generate())
 	snatchTime := time.Now().Unix() //获得当前时间戳，单位为s
-	amount, _ := strconv.ParseInt(money, 10, 64)
 	//将红包id添加到用户的未拆set中
 	envelopeInfo := EnvelopeInfo{
 		SnatchTime: snatchTime,
