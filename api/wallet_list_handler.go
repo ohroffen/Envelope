@@ -3,7 +3,6 @@ package api
 import (
 	"MyEnvelope/redis"
 	"encoding/json"
-	"log"
 	"sort"
 	"strconv"
 
@@ -40,7 +39,6 @@ func rankByValueTime(envelopes map[string]string, length int) PairList {
 
 func WalletListHandler(c *gin.Context) {
 	uid, _ := c.GetPostForm("uid")
-	log.Printf("query %s's wallet", uid)
 	if uid == "" {
 		c.JSON(200, gin.H{
 			"code": 1,

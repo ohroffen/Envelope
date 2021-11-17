@@ -5,7 +5,6 @@ import (
 	"MyEnvelope/mq"
 	"MyEnvelope/redis"
 	"encoding/json"
-	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +13,6 @@ import (
 func OpenHandler(c *gin.Context) {
 	uid, _ := c.GetPostForm("uid")
 	envelopeId, _ := c.GetPostForm("envelope_id")
-	log.Printf("envelope %s opened by %s", envelopeId, uid)
 	//参数的合法
 	if uid == "" || envelopeId == "" {
 		c.JSON(200, gin.H{

@@ -96,7 +96,6 @@ func (e EnvelopeInfo) MarshalBinary() ([]byte, error) {
 
 func SnatchHandler(c *gin.Context) {
 	uid, _ := c.GetPostForm("uid")
-	log.Printf("snatched by %s", uid)
 	if uid == "" {
 		c.JSON(200, gin.H{
 			"code": 4,
@@ -156,11 +155,9 @@ func SnatchHandler(c *gin.Context) {
 		Money:      amount,
 		Opened:     false,
 	}
-	result, errInfo := redis.Rdb.HSet(uid+"list", fmt.Sprint(envelopeId), envelopeInfo).Result()
+	_, errInfo := redis.Rdb.HSet(uid+"list", fmt.Sprint(envelopeId), envelopeInfo).Result()
 	if errInfo != nil {
 		log.Printf("list set error,%v", errInfo)
-	} else {
-		log.Printf("%v insert envelope %v is %v", uid, envelopeId, result)
 	}
 	num_uid, _ := strconv.ParseInt(uid, 10, 64)
 
