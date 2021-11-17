@@ -3,6 +3,7 @@ package main
 import (
 	"MyEnvelope/api"
 	"MyEnvelope/mq"
+	"MyEnvelope/ratelimiter"
 	"MyEnvelope/redis"
 	"log"
 	"os"
@@ -32,6 +33,7 @@ func main() {
 	mq.Mq_init()
 
 	r := gin.Default()
+	r.Use(ratelimiter.TokenRateLimiter())
 
 	// router
 	r.POST("/snatch", api.SnatchHandler)
