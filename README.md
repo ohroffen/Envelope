@@ -1,15 +1,16 @@
 # Envelope
 
-# 一、项目介绍
-本项目基于`MySQl、Redis、Kafka`实现了一个支持高并发的抢红包后端系统，负责处理前端的抢红包、拆红包、获取红包列表等业务请求。
+# 1. 项目介绍
+本项目实现了一个支持高并发的抢红包后端系统，负责处理前端的抢红包、拆红包、获取红包列表等业务请求。
 
-## 1、系统架构
+本仓库为处理请求的业务逻辑模块。
 
-<img src="C:\Users\hongt\Pictures\流程图.jpg" alt="流程图"  />
+## 其他模块
+[配置模块](https://github.com/cmhzc/envelope-manager)
 
+[持久化模块](https://github.com/cmhzc/envelope-writer)
 
-
-## 2、目录说明：
+## 目录说明：
 
 `entity`文件夹中定义了保存在数据库中的红包实体。
 
@@ -19,7 +20,7 @@
 
 `mq`文件夹中包含发送红包消息到`Kafka`的相关代码。
 
-# 二、接口说明
+# 2. 接口说明
 
 该项目`URL`访问请求方式均为`POST`，因此请求参数均包含在请求体中。
 
@@ -39,12 +40,12 @@
 
 ```json
 {
-	"code": 0, // 成功则code=0，否则为其他
+	"code": 0,
 	"msg":  "success", 
 	"data": {
-        "envelope_id": 123, // 红包id
-        "max_count":   5,   // 最多抢几次
-        "cur_count":   3,   // 当前为第几次抢
+        "envelope_id": 123,
+        "max_count":   5,
+        "cur_count":   3,
     }
 }
 ```
@@ -67,8 +68,8 @@
 
 ```json
 {
-    "uid": 123, // 用户id
-    "envelope_id": 123 // 红包id
+    "uid": 123,
+    "envelope_id": 123
 }
 ```
 
@@ -76,10 +77,10 @@
 
 ```json
 {
-    "code": 0,        // 成功则code=0，否则为其他
+    "code": 0,
     "msg": "success",
     "data": {
-        "value": 50   // 红包金额，以“分”为单位
+        "value": 50
     }
 }
 ```
@@ -101,7 +102,7 @@
 
 ```json
 {
-    "uid": 123 // 用户id
+    "uid": 123
 }
 ```
 
@@ -109,20 +110,20 @@
 
 ```json
 {
-    "code": 0, // 成功则code=0，否则为其他
+    "code": 0,
     "msg": "success",
     "data": {
-        "amount": 112, // 钱包总额，“分”为单位
+        "amount": 112,
         "envelope_list": [
             {
                 "envelope_id": 123,
-                "value": 50, // 红包面值
-                "opened": true, // 是否已拆开
-                "snatch_time": 1634551711 // 红包获取时间，UNIX时间戳
+                "value": 50,
+                "opened": true,
+                "snatch_time": 1634551711
             },
             {
                 "envelope_id": 123,
-                "opened": false, // 未拆开的红包不显示value
+                "opened": false,
                 "snatch_time": 1634551711 
             }
         ]
@@ -136,4 +137,3 @@
 | ------------ | --------- | --------------- |
 | 成功         | `0`       | `success`       |
 | 输入格式错误 | `1`       | `invalid input` |
-
