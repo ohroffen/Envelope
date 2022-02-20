@@ -43,10 +43,10 @@
 	"code": 0,
 	"msg":  "success", 
 	"data": {
-        "envelope_id": 123,
-        "max_count":   5,
-        "cur_count":   3,
-    }
+        	"envelope_id": 123,
+        	"max_count":   5,
+        	"cur_count":   3,
+    	}
 }
 ```
 
